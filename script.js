@@ -29,15 +29,28 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==========================================
 const bgMusic = document.getElementById('bgMusic');
 const musicToggle = document.getElementById('musicToggle');
+const pageTracks = {
+    'index.html': { src: 'assets/music/m1.m4a', type: 'audio/mp4' },
+    'memories.html': { src: 'assets/music/m3.ogg', type: 'audio/ogg' },
+    'videos.html': { src: 'assets/music/m4.ogg', type: 'audio/ogg' },
+    'messages.html': { src: 'assets/music/m5.ogg', type: 'audio/ogg' },
+    'reasons.html': { src: 'assets/music/m2.m4a', type: 'audio/mp4' },
+    'thanks.html': { src: 'assets/music/m6.ogg', type: 'audio/ogg' }
+};
 let isMusicPlaying = false;
+const pageKey = window.location.pathname.split('/').pop() || 'index.html';
+const currentTrack = pageTracks[pageKey] || pageTracks['index.html'];
+const musicTimeKey = `musicTime:${pageKey}`;
 
 function initializeMusic() {
     if (!bgMusic || !musicToggle) return;
     
     // Check if music was playing from previous page
     const musicState = sessionStorage.getItem('musicPlaying');
-    const musicTime = sessionStorage.getItem('musicTime');
+    const musicTime = sessionStorage.getItem(musicTimeKey);
     
+    loadMusicTrack(currentTrack, musicTime ? parseFloat(musicTime) : 0);
+
     // Set volume
     bgMusic.volume = 0.3;
     
@@ -78,9 +91,21 @@ function initializeMusic() {
     window.addEventListener('beforeunload', () => {
         sessionStorage.setItem('musicPlaying', isMusicPlaying);
         if (bgMusic) {
-            sessionStorage.setItem('musicTime', bgMusic.currentTime);
+            sessionStorage.setItem(musicTimeKey, bgMusic.currentTime);
         }
     });
+}
+
+function loadMusicTrack(track, startTime = 0) {
+    if (!bgMusic || !track) return;
+    bgMusic.src = track.src;
+    bgMusic.type = track.type;
+    bgMusic.load();
+    bgMusic.addEventListener('loadedmetadata', () => {
+        if (startTime > 0 && startTime < bgMusic.duration) {
+            bgMusic.currentTime = startTime;
+        }
+    }, { once: true });
 }
 
 function toggleMusic() {
